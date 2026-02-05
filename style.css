@@ -1,5 +1,5 @@
 body {
-    background: rgba(68, 243, 150, 0.993)
+    background: rgba(68, 243, 150, 0.993);
     color: rgb(45, 45, 45);
     padding: 10px;
     font-family: Arial, sans-serif;
@@ -66,11 +66,36 @@ main {
 
 /* interests section styles */
 #interests {
-    border: 4px silver ridge;
+    border: 4px rgb(0, 177, 94) ridge;
     padding: 8px;
     margin-top: 20px;
 }
 
 h2, h3 {
     margin: 0px;
+}
+/* Portfolio styles */
+.content h1 {
+  color: black;
+}
+
+#portfolio {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+#portfolio li {
+  background: #01f35e;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+#portfolio li:hover {
+  background: #06dd71;
+}
+
+#portfolio a {
+  text-decoration: none;
+  color: #000000;
 }
