@@ -1,108 +1,393 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Bouncing Box</title>
-    <script src="jquery.min.js"></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Box Game</title>
     <style>
-      .box {
-        width: 70px;
-        height: 70px;
-        background-color: teal;
-        font-size: 300%;
-        text-align: center;
-        user-select: none;
-        display: block;
-        position: absolute;
-        top: 100px;
-        /* Change me! */
-        left: 0px;
-      }
+        body {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            overflow: hidden;
+            transition: background 1s ease-in-out;
+        }
 
-      .board {
-        height: 100vh;
-      }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        #box {
+            width: 100px; 
+            height: 100px; 
+            background-color: #3498db;
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: transform 0.2s, width 0.2s, height 0.2s;
+        }
+
+        .clicked {
+            animation: bounce 0.2s forwards, glitter 0.5s forwards;
+        }
+
+        @keyframes bounce { 
+            0% { transform: scale(1); } 
+            50% { transform: scale(1.1); } 
+            100% { transform: scale(1); } 
+        }
+
+        @keyframes glitter { 
+            0% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); } 
+            100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0); } 
+        }
+
+        #comboMessage, #deathScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 48px;
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            display: none;
+        }
+
+        @keyframes popCombo { 
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; } 
+            50% { opacity: 1; } 
+            100% { transform: translate(-50%, -50%) scale(1) rotate(15deg); opacity: 0; } 
+        }
+
+        @keyframes popDeath { 
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; } 
+            50% { opacity: 1; } 
+            100% { transform: translate(-50%, -50%) scale(1) rotate(-15deg); opacity: 0; } 
+        }
+
+        #deathScreen {
+            color: red;
+            font-size: 64px;
+        }
+
+        .ability {
+            position: fixed;
+            bottom: 20px;
+            width: 100px;
+            height: 50px;
+            border: none;
+            color: white;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        #freezeAbility {
+            background-color: #1abc9c;
+            display: none; /* Start hidden */
+        }
+
+        #biggerBoxAbility {
+            background-color: #e67e22;
+            display: none; /* Start hidden */
+        }
+
+        #boxedAbility {
+            background-color: #e74c3c;
+            display: none; /* Start hidden */
+        }
+
+        .frozen {
+            animation: freezeEffect 3s forwards;
+        }
+
+        @keyframes freezeEffect {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .bigger {
+            animation: growEffect 5s forwards;
+        }
+
+        @keyframes growEffect {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.5); }
+        }
+
+        /* Style for the boxed effect */
+        .boxed {
+            width: 200px; /* Increased width for better visibility */
+            height: 200px; /* Increased height for better visibility */
+            position: absolute;
+            border: 2px dashed #e74c3c;
+            pointer-events: none; /* Prevent interaction */
+        }
+
+        @keyframes bounceInside {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, -5px); }
+            50% { transform: translate(5px, 5px); }
+            75% { transform: translate(-5px, 5px); }
+            100% { transform: translate(0, 0); }
+        }
     </style>
-    <!-- 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
-  </head>
-
-  <body class="board">
-    <!-- HTML for the box -->
-    <div class="box">?</div>
+</head>
+<body>
+    <div id="score">Score: 0 | Combo: 0 | Misses: 0</div>
+    <div id="box"></div>
+    <div id="comboMessage">Combo Master!</div>
+    <div id="deathScreen">Game Over!</div>
+    <audio id="bounceSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+    
+    <button id="freezeAbility" class="ability">Freeze</button>
+    <button id="biggerBoxAbility" class="ability">Bigger Box</button>
+    <button id="boxedAbility" class="ability">Boxed</button>
 
     <script>
-      (function () {
-        "use strict";
-        /* global jQuery */
+        const box = document.getElementById('box');
+        const scoreDisplay = document.getElementById('score');
+        const bounceSound = document.getElementById('bounceSound');
+        const comboMessage = document.getElementById('comboMessage');
+        const deathScreen = document.getElementById('deathScreen');
+        const freezeAbility = document.getElementById('freezeAbility');
+        const biggerBoxAbility = document.getElementById('biggerBoxAbility');
+        const boxedAbility = document.getElementById('boxedAbility');
 
-        //////////////////////////////////////////////////////////////////
-        /////////////////// SETUP DO NOT DELETE //////////////////////////
-        //////////////////////////////////////////////////////////////////
+        let score = 0;
+        let combo = 0;
+        let misses = 0;
+        const maxMisses = 5; // Maximum misses before game over
+        let speed = 2; 
+        let dx = speed; 
+        let dy = speed; 
+        const comboThreshold = 5; 
+        const speedIncrement = 0.4; 
+        const comboMessages = [
+            "Cool Combo!", 
+            "Awesome Combo!", 
+            "Fantastic Combo!", 
+            "Amazing Combo!", 
+            "Epic Combo!", 
+            "Unbelievable Combo!", 
+            "Incredible Combo!", 
+            "Legendary Combo!", 
+            "Mind-Blowing Combo!", 
+            "Combo Master!",
+            "How Are You Doing This?",
+            "?!?!?!?!?!?",
+            "bro",
+            "autoclicker",
+            "Are You Cheating?",
+        ];
 
-        var box = jQuery(".box"); // reference to the HTML .box element
-        var board = jQuery(".board"); // reference to the HTML .board element
-        var boardWidth = board.width(); // the maximum X-Coordinate of the screen
+        // Variables for animation control
+        let bounceAnimation = null;
 
-        // update the boardWidth variable when the window is resized
-        jQuery(window).on("resize", function () {
-          boardWidth = board.width();
+        function updateScore() {
+            scoreDisplay.textContent = `Score: ${score} | Combo: ${combo} | Misses: ${misses}`;
+        }
+
+        function showComboMessage() {
+            const messageIndex = Math.min(Math.floor(combo / comboThreshold), comboMessages.length - 1);
+            comboMessage.innerText = comboMessages[messageIndex];
+            comboMessage.style.display = 'block';
+            comboMessage.style.animation = 'popCombo 1s forwards'; // Trigger animation
+            setTimeout(() => {
+                comboMessage.style.animation = ''; // Reset animation
+                comboMessage.style.display = 'none';
+            }, 1000);
+        }
+
+        function showDeathScreen() {
+            deathScreen.style.display = 'block';
+            deathScreen.style.animation = 'popDeath 1s forwards'; // Trigger animation
+        }
+
+        function freezeBox() {
+            box.style.pointerEvents = 'none'; // Prevent interactions with the box
+            clearInterval(bounceAnimation); // Stop the box's movement completely
+            box.classList.add('frozen');
+            freezeAbility.style.display = 'none'; // Hide the ability button immediately
+            setTimeout(() => {
+                box.classList.remove('frozen');
+                box.style.pointerEvents = 'auto'; // Allow interactions after freeze
+            }, 3000); // Freeze duration
+        }
+
+        function biggerBox() {
+            box.style.width = '150px'; 
+            box.style.height = '150px'; 
+            biggerBoxAbility.style.display = 'none'; // Hide the ability button after usage
+            setTimeout(() => {
+                box.style.width = '100px'; // Reset size after 3 seconds
+                box.style.height = '100px';
+            }, 3000); // Duration for the bigger box effect
+        }
+
+        function boxedEffect() {
+            const boxedDiv = document.createElement('div');
+            boxedDiv.classList.add('boxed');
+            document.body.appendChild(boxedDiv);
+            boxedDiv.style.left = `${box.offsetLeft + (box.offsetWidth / 2) - 100}px`; // Center adjustment
+            boxedDiv.style.top = `${box.offsetTop + (box.offsetHeight / 2) - 100}px`; // Center adjustment
+
+            // Bounce inside the boxedDiv
+            let bounceInterval = null;
+
+            function bounce() {
+                let boxRect = box.getBoundingClientRect();
+                let boxedRect = boxedDiv.getBoundingClientRect();
+
+                // Check boundaries and reverse direction if needed
+                if (boxRect.right >= boxedRect.right || boxRect.left <= boxedRect.left) {
+                    dx *= -1; // Reverse x direction
+                }
+                if (boxRect.bottom >= boxedRect.bottom || boxRect.top <= boxedRect.top) {
+                    dy *= -1; // Reverse y direction
+                }
+
+                box.style.left = boxRect.left + dx + 'px';
+                box.style.top = boxRect.top + dy + 'px';
+            }
+
+            bounceInterval = setInterval(bounce, 20);
+
+            setTimeout(() => {
+                clearInterval(bounceInterval);
+                boxedDiv.remove(); // Remove boxed area after 5 seconds
+            }, 5000);
+            boxedAbility.style.display = 'none'; // Hide the ability button immediately
+        }
+
+        function showRandomAbility() {
+            const abilities = [freezeAbility, biggerBoxAbility, boxedAbility];
+            const randomAbility = abilities[Math.floor(Math.random() * abilities.length)];
+            randomAbility.style.display = 'block'; // Show randomly selected ability
+            setTimeout(() => {
+                randomAbility.style.display = 'none'; // Hide after showing
+            }, 5000); // Display for 5 seconds
+        }
+
+        function changeBackground() {
+            const randomColor1 = '#' + Math.floor(Math.random() * 16777215).toString(16);
+            const randomColor2 = '#' + Math.floor(Math.random() * 16777215).toString(16);
+            document.body.style.background = `linear-gradient(to right, ${randomColor1}, ${randomColor2})`;
+        }
+
+        function resetGame() {
+            speed = 2;
+            misses = 0;
+            combo = 0;
+            score = 0;
+            updateScore();
+            deathScreen.style.display = 'none'; 
+            box.style.display = 'block'; 
+            animate(); 
+            freezeAbility.style.display = 'none'; 
+            biggerBoxAbility.style.display = 'none'; 
+            boxedAbility.style.display = 'none'; 
+        }
+
+        box.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            score++; 
+            combo++; 
+            bounceSound.play();
+            box.classList.add('clicked');
+            setTimeout(() => box.classList.remove('clicked'), 200);
+
+            if (combo % comboThreshold === 0) {
+                showComboMessage(); 
+            }
+
+            speed += speedIncrement; 
+
+            updateScore();
+            changeBackground();
+            const newSize = Math.max(Math.random() * 50 + 50, 100);
+            box.style.width = newSize + 'px';
+            box.style.height = newSize + 'px';
+            box.style.backgroundColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
         });
 
-        // Every 50 milliseconds, call the update Function (see below)
-        setInterval(update, 50);
+        document.body.addEventListener('click', (event) => {
+            // Increment misses only if clicking outside the box and not on abilities
+            if (misses < maxMisses && !event.target.classList.contains('ability')) {
+                misses++;
+                combo = 0; // Reset combo on miss
+                updateScore();
+            }
+        });
 
-        // Every time the box is clicked, call the handleBoxClick Function (see below)
-        box.on("click", handleBoxClick);
-
-        // moves the Box to a new position on the screen along the X-Axis
-        function moveBoxTo(newPositionX) {
-          box.css("left", newPositionX);
-        }
-
-        // changes the text displayed on the Box
-        function changeBoxText(newText) {
-          box.text(newText);
-        }
-
-        //////////////////////////////////////////////////////////////////
-        /////////////////// YOUR CODE BELOW HERE /////////////////////////
-        //////////////////////////////////////////////////////////////////
-
-        // TODO 2 - Variable declarations
-
-
-
-
-
-        /**
-         * This Function will be called 20 times/second.
-         * Each time it is called, it should move the Box to a new location.
-         * If the box drifts off the screen, turn it around!
-         */
-        function update() {
-
+        freezeAbility.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent click from counting as a miss
+            freezeBox();
+        });
         
+        biggerBoxAbility.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent click from counting as a miss
+            biggerBox();
+        });
 
-          
+        boxedAbility.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent click from counting as a miss
+            boxedEffect();
+        });
+
+        function animate() {
+            let boxRect = box.getBoundingClientRect();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // Move the box if it's not frozen
+            if (box.style.pointerEvents !== 'none') {
+                box.style.left = boxRect.left + dx + 'px';
+                box.style.top = boxRect.top + dy + 'px';
+
+                // Collision detection with edges
+                if (boxRect.right >= windowWidth) {
+                    dx = -Math.abs(dx); // Reverse x direction
+                }
+                if (boxRect.left <= 0) {
+                    dx = Math.abs(dx); // Reverse x direction
+                }
+                if (boxRect.bottom >= windowHeight) {
+                    dy = -Math.abs(dy); // Reverse y direction
+                }
+                if (boxRect.top <= 0) {
+                    dy = Math.abs(dy); // Reverse y direction
+                }
+            }
+
+            // Check for game over
+            if (misses >= maxMisses) {
+                box.style.display = 'none'; 
+                showDeathScreen(); // Use the new function
+                return; 
+            }
+
+            requestAnimationFrame(animate);
+            updateScore();
         }
 
-        /**
-         * This Function will be called each time the box is clicked.
-         * Each time it is called, it should perform each of the following actions:
-         * - increase the points total
-         * - increase the speed
-         * - move the box to the left side of the screen.
-         */
-        function handleBoxClick() {
+        // Start the ability timer
+        setInterval(showRandomAbility, 10000); // Show an ability every 10 seconds
 
-
-
-
-        }
-
-
-        
-      })();
+        animate(); 
     </script>
-  </body>
+</body>
 </html>
