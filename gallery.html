@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Jeffery's Gallery</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="all-contents">
+      <nav>
+        <h1>Jeffery's Amazing Website</h1>
+        <ul id="nav-ul">
+          <li class="nav-li">
+            <a href="index.html">Home</a>
+          </li>
+          <li class="nav-li">
+            <a href="portfolio.html">Portfolio</a>
+          </li>
+          <li class="nav-li">
+            <a href="gallery.html">Gallery</a>
+          </li>
+        </ul>
+      </nav>
+      <main>
+        <div class="content">
+          <h1>Image Gallery</h1>
+          <p class="gallery-note">Click on any image to view it larger</p>
+          <div class="gallery">
+            <figure>
+              <img src="assets/ant-hallway.jpg" alt="Ant Hallway" onclick="openModal(this.src, this.alt)">
+              <figcaption>Ant Hallway</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/ant.jpg" alt="Ant" onclick="openModal(this.src, this.alt)">
+              <figcaption>Ant</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/buttons.jpg" alt="Buttons" onclick="openModal(this.src, this.alt)">
+              <figcaption>Buttons</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/drawing.jpg" alt="Drawing" onclick="openModal(this.src, this.alt)">
+              <figcaption>Drawing</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/drawing2.jpg" alt="Drawing 2" onclick="openModal(this.src, this.alt)">
+              <figcaption>Drawing 2</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/hall.jpg" alt="Hall" onclick="openModal(this.src, this.alt)">
+              <figcaption>Hall</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/jets.jpg" alt="Jets" onclick="openModal(this.src, this.alt)">
+              <figcaption>Jets</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/skeleton.jpg" alt="Skeleton" onclick="openModal(this.src, this.alt)">
+              <figcaption>Skeleton</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/star.jpg" alt="Star" onclick="openModal(this.src, this.alt)">
+              <figcaption>Star</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/trophy-case.jpg" alt="Trophy Case" onclick="openModal(this.src, this.alt)">
+              <figcaption>Trophy Case</figcaption>
+            </figure>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal for enlarged image -->
+    <div id="imageModal" class="modal">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <img class="modal-content" id="modalImage">
+      <div id="caption"></div>
+    </div>
+
+    <script>
+      function openModal(src, alt) {
+        document.getElementById('imageModal').style.display = 'block';
+        document.getElementById('modalImage').src = src;
+        document.getElementById('caption').innerHTML = alt;
+      }
+
+      function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        var modal = document.getElementById('imageModal');
+        if (event.target == modal) {
+          modal.style.display = 'none';
+        }
+      }
+    </script>
+  </body>
+</html>
