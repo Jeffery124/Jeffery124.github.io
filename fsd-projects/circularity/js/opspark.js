@@ -48,7 +48,7 @@
         }
         resizeCanvas();
         
-        //_app.stage.addChild(draw.rect(canvas.width, canvas.height, null, '#4F5661', 1));
+        //_app.stage.addChild(draw.rect(canvas.width, canvas.height, null, '#3a79df', 1));
         _app.stage.addChild(_app.view);
         createjs.Ticker.setFPS(60);
         createjs.Ticker.on('tick', _app.update);
